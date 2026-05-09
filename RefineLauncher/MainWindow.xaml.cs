@@ -51,7 +51,7 @@ namespace RefineLauncher
         private async Task<(bool hasUpdate, string? zipUrl, string tagName)> CheckForUpdateAsync()
         {
             var json = await Http.GetStringAsync(
-                $"https://api.github.com/repos/{GitHubRepo}/releases/latest");
+                $"https://api.github.com/repos/{GitHubRepo}/releases/latest").ConfigureAwait(false);
 
             using var doc = JsonDocument.Parse(json);
             var root = doc.RootElement;
@@ -78,21 +78,21 @@ namespace RefineLauncher
             var zipPath = Path.Combine(Path.GetTempPath(), "RefineUpdate.zip");
             var extractDir = Path.Combine(Path.GetTempPath(), "RefineUpdate");
 
-            using (var response = await Http.GetAsync(zipUrl, HttpCompletionOption.ResponseHeadersRead))
+            using (var response = await Http.GetAsync(zipUrl, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait(false))
             {
                 var total = response.Content.Headers.ContentLength ?? 0L;
-                using var src = await response.Content.ReadAsStreamAsync();
+                using var src = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
                 using var dst = File.Create(zipPath);
 
                 var buf = new byte[81920];
                 long done = 0;
                 int read;
-                while ((read = await src.ReadAsync(buf)) > 0)
+                while ((read = await src.ReadAsync(buf).ConfigureAwait(false)) > 0)
                 {
-                    await dst.WriteAsync(buf.AsMemory(0, read));
+                    await dst.WriteAsync(buf.AsMemory(0, read)).ConfigureAwait(false);
                     done += read;
                     if (total > 0)
-                        Dispatcher.Invoke(() => UpdateProgress.Value = (double)done / total * 100);
+                        await Dispatcher.InvokeAsync(() => UpdateProgress.Value = (double)done / total * 100);
                 }
             }
 
@@ -134,7 +134,8 @@ namespace RefineLauncher
             Process.Start(new ProcessStartInfo
             {
                 FileName = target,
-                UseShellExecute = true
+                WorkingDirectory = ExeDir,
+                UseShellExecute = false
             });
 
             Dispatcher.Invoke(() => Application.Current.Shutdown());

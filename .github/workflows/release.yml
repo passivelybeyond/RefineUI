@@ -62,7 +62,7 @@ jobs:
 
           Copy-Item "publish/RefineUI/RefineUI.exe"           "$out/"
           Copy-Item "publish/RefineLauncher/RefineLauncher.exe" "$out/"
-          Copy-Item "x64/Release/RefineCore.exe"              "$out/"
+          Copy-Item "RefineCore/x64/Release/RefineCore.exe"    "$out/"
 
           $zip = "Refine-${{ steps.ver.outputs.VERSION }}.zip"
           Compress-Archive -Path "$out/*" -DestinationPath $zip

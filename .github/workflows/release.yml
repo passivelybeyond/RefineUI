@@ -30,7 +30,7 @@ jobs:
 
       # ── C++ backend ────────────────────────────────────────────────────────
       - name: Build RefineCore (Release|x64)
-        run: msbuild RefineCore/RefineCore.vcxproj /p:Configuration=Release /p:Platform=x64 /m /nologo
+        run: msbuild RefineCore/RefineCore.vcxproj /p:Configuration=Release /p:Platform=x64 /p:PlatformToolset=v143 /m /nologo
 
       # ── .NET apps (single-file, self-contained, no PDB) ───────────────────
       - name: Publish RefineUI

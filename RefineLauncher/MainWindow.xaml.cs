@@ -12,12 +12,12 @@ using Wpf.Ui.Controls;
 
 namespace RefineLauncher
 {
-    public partial class MainWindow : FluentWindow
+    public partial class MainWindow
     {
         private static readonly string ExeDir = AppContext.BaseDirectory;
         private const string GitHubRepo = "passivelybeyond/RefineUI";
 
-        private static readonly HttpClient Http = new(new HttpClientHandler())
+        private static readonly HttpClient Http = new()
         {
             Timeout = TimeSpan.FromSeconds(30),
             DefaultRequestHeaders = { { "User-Agent", "RefineLauncher" } }
@@ -33,10 +33,8 @@ namespace RefineLauncher
 
         private async Task RunAsync()
         {
-            // 1. Delete leftover from previous self-update
             TryDelete(Path.Combine(ExeDir, "RefineLauncher.exe.old"));
 
-            // 2. Check for update
             SetStatus("Checking for updates…");
             try
             {
@@ -49,12 +47,8 @@ namespace RefineLauncher
                     ShowProgress(false);
                 }
             }
-            catch
-            {
-                // Update failed — not fatal, just launch
-            }
+            catch { }
 
-            // 3. Launch RefineUI
             Launch();
         }
 
@@ -70,7 +64,7 @@ namespace RefineLauncher
             var versionStr = tagName.TrimStart('v');
 
             var current = Assembly.GetExecutingAssembly().GetName().Version ?? new Version(0, 0, 0, 0);
-            if (!Version.TryParse(versionStr, out var remote) || remote <= current)
+            if (!Version.TryParse(versionStr, out var remote) || remote is null || remote <= current)
                 return (false, null, tagName);
 
             foreach (var asset in root.GetProperty("assets").EnumerateArray())
@@ -88,10 +82,9 @@ namespace RefineLauncher
             var zipPath = Path.Combine(Path.GetTempPath(), "RefineUpdate.zip");
             var extractDir = Path.Combine(Path.GetTempPath(), "RefineUpdate");
 
-            // Download with progress
             using (var response = await Http.GetAsync(zipUrl, HttpCompletionOption.ResponseHeadersRead))
             {
-                var total = response.Content.Headers.ContentLength ?? 0;
+                var total = response.Content.Headers.ContentLength ?? 0L;
                 using var src = await response.Content.ReadAsStreamAsync();
                 using var dst = File.Create(zipPath);
 
@@ -103,25 +96,23 @@ namespace RefineLauncher
                     await dst.WriteAsync(buf.AsMemory(0, read));
                     done += read;
                     if (total > 0)
-                        Dispatcher.Invoke(() => Progress.Value = (double)done / total * 100);
+                        Dispatcher.Invoke(() => UpdateProgress.Value = (double)done / total * 100);
                 }
             }
 
-            // Extract
             SetStatus("Applying update…");
             if (Directory.Exists(extractDir))
                 Directory.Delete(extractDir, recursive: true);
             ZipFile.ExtractToDirectory(zipPath, extractDir, overwriteFiles: true);
 
-            // Apply — never delete, only overwrite
-            foreach (var src in Directory.GetFiles(extractDir))
+            foreach (var src in Directory.GetFiles(extractDir, "*", SearchOption.AllDirectories))
             {
-                var name = Path.GetFileName(src);
-                var dest = Path.Combine(ExeDir, name);
+                var relative = Path.GetRelativePath(extractDir, src);
+                var dest = Path.Combine(ExeDir, relative);
+                Directory.CreateDirectory(Path.GetDirectoryName(dest)!);
 
-                if (name.Equals("RefineLauncher.exe", StringComparison.OrdinalIgnoreCase))
+                if (Path.GetFileName(src).Equals("RefineLauncher.exe", StringComparison.OrdinalIgnoreCase))
                 {
-                    // Can't overwrite a running exe — rename it out of the way first
                     var old = dest + ".old";
                     TryDelete(old);
                     File.Move(dest, old);
@@ -130,7 +121,6 @@ namespace RefineLauncher
                 File.Copy(src, dest, overwrite: true);
             }
 
-            // Cleanup temp files
             TryDelete(zipPath);
             try { Directory.Delete(extractDir, recursive: true); } catch { }
         }
@@ -159,7 +149,7 @@ namespace RefineLauncher
 
         private void ShowProgress(bool visible) =>
             Dispatcher.Invoke(() =>
-                Progress.Visibility = visible ? Visibility.Visible : Visibility.Collapsed);
+                UpdateProgress.Visibility = visible ? Visibility.Visible : Visibility.Collapsed);
 
         private static void TryDelete(string path)
         {

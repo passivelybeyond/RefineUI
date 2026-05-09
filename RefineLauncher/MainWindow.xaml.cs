@@ -18,7 +18,7 @@ namespace RefineLauncher
 
         private static readonly HttpClient Http = new()
         {
-            Timeout = TimeSpan.FromSeconds(30),
+            Timeout = TimeSpan.FromMinutes(15),
             DefaultRequestHeaders = { { "User-Agent", "RefineLauncher" } }
         };
 
@@ -44,7 +44,11 @@ namespace RefineLauncher
                     ShowProgress(false);
                 }
             }
-            catch { }
+            catch (Exception ex)
+            {
+                SetStatus($"Update failed: {ex.Message}");
+                await Task.Delay(3000).ConfigureAwait(false);
+            }
 
             Launch();
         }

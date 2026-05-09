@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Media.Animation;
 
 namespace RefineLauncher
 {
@@ -141,12 +142,35 @@ namespace RefineLauncher
             Dispatcher.Invoke(() => Application.Current.Shutdown());
         }
 
+        private static readonly CubicEase EaseOut = new() { EasingMode = EasingMode.EaseOut };
+
         private void SetStatus(string text) =>
-            Dispatcher.Invoke(() => StatusText.Text = text);
+            Dispatcher.InvokeAsync(() =>
+            {
+                StatusText.Text = text;
+                StatusText.BeginAnimation(OpacityProperty,
+                    new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(200))
+                    { EasingFunction = EaseOut });
+            });
 
         private void ShowProgress(bool visible) =>
-            Dispatcher.Invoke(() =>
-                UpdateProgress.Visibility = visible ? Visibility.Visible : Visibility.Collapsed);
+            Dispatcher.InvokeAsync(() =>
+            {
+                if (visible)
+                {
+                    UpdateProgress.Visibility = Visibility.Visible;
+                    UpdateProgress.BeginAnimation(OpacityProperty,
+                        new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(200))
+                        { EasingFunction = EaseOut });
+                }
+                else
+                {
+                    var fade = new DoubleAnimation(0, TimeSpan.FromMilliseconds(150))
+                    { EasingFunction = EaseOut };
+                    fade.Completed += (_, _) => UpdateProgress.Visibility = Visibility.Collapsed;
+                    UpdateProgress.BeginAnimation(OpacityProperty, fade);
+                }
+            });
 
         private static void TryDelete(string path)
         {

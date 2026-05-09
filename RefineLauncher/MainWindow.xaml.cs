@@ -7,8 +7,6 @@ using System.Reflection;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows;
-using Wpf.Ui.Appearance;
-using Wpf.Ui.Controls;
 
 namespace RefineLauncher
 {
@@ -25,8 +23,6 @@ namespace RefineLauncher
 
         public MainWindow()
         {
-            WindowBackdropType = WindowBackdropType.Mica;
-            ApplicationThemeManager.Apply(ApplicationTheme.Dark);
             InitializeComponent();
             Loaded += async (_, _) => await RunAsync();
         }

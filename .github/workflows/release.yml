@@ -59,18 +59,24 @@ jobs:
       # ── Assemble zip ───────────────────────────────────────────────────────
       - name: Build release zip
         shell: pwsh
+        id: zip
         run: |
           $out = "release"
           New-Item -ItemType Directory -Force $out | Out-Null
 
-          Copy-Item "publish/RefineUI/RefineUI.exe"           "$out/"
-          Copy-Item "publish/RefineLauncher/RefineLauncher.exe" "$out/"
-          Copy-Item "RefineCore/x64/Release/RefineCore.exe"    "$out/"
+          Write-Host "=== publish/RefineUI contents ==="
+          Get-ChildItem publish/RefineUI | Select-Object Name, Length
+
+          Write-Host "=== publish/RefineLauncher contents ==="
+          Get-ChildItem publish/RefineLauncher | Select-Object Name, Length
+
+          Copy-Item "publish/RefineUI/*"           "$out/"
+          Copy-Item "publish/RefineLauncher/*"     "$out/"
+          Copy-Item "RefineCore/x64/Release/RefineCore.exe" "$out/"
 
           $zip = "Refine-${{ steps.ver.outputs.VERSION }}.zip"
           Compress-Archive -Path "$out/*" -DestinationPath $zip
           echo "ZIP=$zip" >> $env:GITHUB_OUTPUT
-        id: zip
 
       # ── Publish GitHub Release ─────────────────────────────────────────────
       - name: Create GitHub Release

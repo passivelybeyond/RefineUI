@@ -1,0 +1,79 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+          include-prerelease: true
+
+      - name: Add MSBuild to PATH
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Parse version from tag
+        id: ver
+        shell: pwsh
+        run: |
+          $v = "${{ github.ref_name }}".TrimStart('v')
+          echo "VERSION=$v" >> $env:GITHUB_OUTPUT
+
+      # ── C++ backend ────────────────────────────────────────────────────────
+      - name: Build RefineCore (Release|x64)
+        run: msbuild RefineCore/RefineCore.vcxproj /p:Configuration=Release /p:Platform=x64 /m /nologo
+
+      # ── .NET apps (single-file, self-contained, no PDB) ───────────────────
+      - name: Publish RefineUI
+        run: >
+          dotnet publish RefineUI/RefineUI.csproj
+          -c Release -r win-x64 --self-contained true
+          -p:PublishSingleFile=true
+          -p:DebugType=none
+          -p:AssemblyVersion=${{ steps.ver.outputs.VERSION }}
+          -p:FileVersion=${{ steps.ver.outputs.VERSION }}
+          -o publish/RefineUI
+
+      - name: Publish RefineLauncher
+        run: >
+          dotnet publish RefineLauncher/RefineLauncher.csproj
+          -c Release -r win-x64 --self-contained true
+          -p:PublishSingleFile=true
+          -p:DebugType=none
+          -p:AssemblyVersion=${{ steps.ver.outputs.VERSION }}
+          -p:FileVersion=${{ steps.ver.outputs.VERSION }}
+          -o publish/RefineLauncher
+
+      # ── Assemble zip ───────────────────────────────────────────────────────
+      - name: Build release zip
+        shell: pwsh
+        run: |
+          $out = "release"
+          New-Item -ItemType Directory -Force $out | Out-Null
+
+          Copy-Item "publish/RefineUI/RefineUI.exe"           "$out/"
+          Copy-Item "publish/RefineLauncher/RefineLauncher.exe" "$out/"
+          Copy-Item "x64/Release/RefineCore.exe"              "$out/"
+
+          $zip = "Refine-${{ steps.ver.outputs.VERSION }}.zip"
+          Compress-Archive -Path "$out/*" -DestinationPath $zip
+          echo "ZIP=$zip" >> $env:GITHUB_OUTPUT
+        id: zip
+
+      # ── Publish GitHub Release ─────────────────────────────────────────────
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Refine ${{ github.ref_name }}
+          files: ${{ steps.zip.outputs.ZIP }}
+          generate_release_notes: true

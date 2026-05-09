@@ -1,0 +1,204 @@
+<ui:FluentWindow
+    x:Class="RefineUI.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Title="Refine"
+    Height="450" Width="800"
+    MinHeight="450" MinWidth="800"
+    MaxHeight="450" MaxWidth="800"
+    ResizeMode="CanMinimize"
+    Background="Transparent"
+    ExtendsContentIntoTitleBar="True"
+    MouseDown="FluentWindow_MouseDown">
+
+    <ui:FluentWindow.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ui:ThemesDictionary Theme="Dark" />
+                <ui:ControlsDictionary />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </ui:FluentWindow.Resources>
+
+    <Grid>
+
+        <!-- Title bar — ShowMaximize=False hides the button;
+             ResizeMode=CanMinimize + OnStateChanged in code-behind are the real guards. -->
+        <ui:TitleBar Title="Refine" ShowMaximize="False"/>
+
+        <!-- ═══ Main view ════════════════════════════════════════════════════ -->
+        <Grid x:Name="MainView" Margin="25,53,25,98">
+
+            <!-- Left: thumbnail + video title -->
+            <Viewbox Stretch="Uniform" HorizontalAlignment="Left" VerticalAlignment="Center">
+                <StackPanel Width="426">
+                    <ui:Image x:Name="ThumbnailImage" Height="240" CornerRadius="12">
+                        <ui:Image.Effect>
+                            <DropShadowEffect BlurRadius="200" Opacity="0.5"/>
+                        </ui:Image.Effect>
+                    </ui:Image>
+                    <ui:TextBlock x:Name="TitleTextBlock"
+                                  Margin="0,15,0,0"
+                                  Foreground="#FFC7C7C7"
+                                  FontSize="18"
+                                  FontFamily="Segoe UI Bold"
+                                  TextWrapping="Wrap"/>
+                </StackPanel>
+            </Viewbox>
+
+            <!-- Right: format / quality / progress -->
+            <StackPanel Margin="480,0,0,0">
+                <ui:DropDownButton x:Name="FileTypeDropdown"
+                                   Content="MP4 (Video)"
+                                   Foreground="#FFC7C7C7"
+                                   HorizontalAlignment="Stretch"
+                                   HorizontalContentAlignment="Left"
+                                   Margin="0,0,0,10">
+                    <ui:DropDownButton.Flyout>
+                        <ContextMenu>
+                            <MenuItem Header="MP4 (Video)" Click="FileType_Click"/>
+                            <MenuItem Header="MP3 (Audio)" Click="FileType_Click"/>
+                            <MenuItem Header="WAV (Audio)" Click="FileType_Click"/>
+                        </ContextMenu>
+                    </ui:DropDownButton.Flyout>
+                </ui:DropDownButton>
+
+                <ui:DropDownButton x:Name="VideoQualityDropdown"
+                                   Content="1080p (FHD)"
+                                   Foreground="#FFC7C7C7"
+                                   HorizontalAlignment="Stretch"
+                                   HorizontalContentAlignment="Left"
+                                   Margin="0,0,0,10">
+                    <ui:DropDownButton.Flyout>
+                        <ContextMenu>
+                            <MenuItem Header="4K (UHD)"    Click="VideoQuality_Click"/>
+                            <MenuItem Header="1440p (QHD)" Click="VideoQuality_Click"/>
+                            <MenuItem Header="1080p (FHD)" Click="VideoQuality_Click"/>
+                            <MenuItem Header="720p"        Click="VideoQuality_Click"/>
+                            <MenuItem Header="480p"        Click="VideoQuality_Click"/>
+                            <MenuItem Header="360p"        Click="VideoQuality_Click"/>
+                            <MenuItem Header="144p"        Click="VideoQuality_Click"/>
+                        </ContextMenu>
+                    </ui:DropDownButton.Flyout>
+                </ui:DropDownButton>
+
+                <ProgressBar x:Name="DownloadProgress"
+                             Height="4"
+                             Margin="0,10,0,6"
+                             Minimum="0" Maximum="100" Value="0"
+                             Visibility="Collapsed"/>
+
+                <ui:TextBlock x:Name="StatusText"
+                              Foreground="#FF888888"
+                              FontSize="12"
+                              Visibility="Collapsed"
+                              TextWrapping="Wrap"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- ═══ Settings view (overlays main, same Margin) ══════════════════ -->
+        <Grid x:Name="SettingsView" Visibility="Collapsed" Margin="25,53,25,98">
+            <StackPanel>
+                <ui:TextBlock Text="Settings"
+                              FontSize="22"
+                              FontWeight="SemiBold"
+                              Foreground="#FFC7C7C7"
+                              Margin="0,4,0,28"/>
+
+                <ui:TextBlock Text="DOWNLOAD FOLDER"
+                              FontSize="11"
+                              Foreground="#FF666666"
+                              FontFamily="Segoe UI Semibold"
+                              Margin="0,0,0,8"/>
+
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="8"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <ui:TextBox x:Name="DownloadFolderText"
+                                Grid.Column="0"
+                                IsReadOnly="True"
+                                Foreground="#FFC7C7C7"
+                                VerticalContentAlignment="Center"
+                                Height="40"
+                                FontSize="13"/>
+                    <ui:Button Grid.Column="2"
+                               Content="Browse"
+                               Height="40"
+                               Padding="16,0"
+                               Foreground="#FFC7C7C7"
+                               Click="BrowseFolder_Click"/>
+                </Grid>
+
+                <ui:TextBlock Text="CLIPBOARD"
+                              FontSize="11"
+                              Foreground="#FF666666"
+                              FontFamily="Segoe UI Semibold"
+                              Margin="0,24,0,10"/>
+
+                <ui:ToggleSwitch x:Name="CopyToClipboardToggle"
+                                 Content="Copy downloaded file to clipboard"
+                                 Foreground="#FFC7C7C7"
+                                 IsChecked="True"
+                                 Checked="CopyToClipboard_Changed"
+                                 Unchecked="CopyToClipboard_Changed"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- ═══ Bottom bar (always visible) ═════════════════════════════════ -->
+        <DockPanel VerticalAlignment="Bottom" Margin="25,0,25,25" Height="48">
+
+            <!-- Left side -->
+            <ui:Button x:Name="PasteButton"
+                       DockPanel.Dock="Left"
+                       Height="48" Width="48"
+                       FontFamily="Segoe Fluent Icons" Content="&#xe77f;"
+                       FontSize="16" Foreground="#FFC7C7C7"
+                       Click="PasteButton_Click"
+                       Margin="0,0,8,0"
+                       ToolTip="Paste URL"/>
+
+            <ui:Button x:Name="OpenDownloadsButton"
+                       DockPanel.Dock="Left"
+                       Height="48" Width="48"
+                       FontFamily="Segoe Fluent Icons" Content="&#xe838;"
+                       FontSize="16" Foreground="#FFC7C7C7"
+                       Click="OpenDownloads_Click"
+                       ToolTip="Open downloads folder"/>
+
+            <!-- Right side (declared right-to-left so Download ends up rightmost) -->
+            <ui:Button x:Name="DownloadButton"
+                       DockPanel.Dock="Right"
+                       Height="48" Width="48"
+                       FontFamily="Segoe Fluent Icons" Content="&#xe896;"
+                       FontSize="16" Foreground="#FFC7C7C7"
+                       Click="DownloadButton_Click"
+                       ToolTip="Download"/>
+
+            <ui:Button x:Name="SettingsButton"
+                       DockPanel.Dock="Right"
+                       Height="48" Width="48"
+                       FontFamily="Segoe Fluent Icons" Content="&#xe713;"
+                       FontSize="16" Foreground="#FFC7C7C7"
+                       Click="SettingsButton_Click"
+                       Margin="0,0,8,0"
+                       ToolTip="Settings"/>
+
+            <!-- URL textbox fills all remaining space -->
+            <ui:TextBox x:Name="URLTextbox"
+                        Height="48" FontSize="16"
+                        Foreground="#FFC7C7C7"
+                        Margin="8,0,8,0"
+                        VerticalContentAlignment="Center"
+                        FontFamily="Segoe UI"
+                        PlaceholderText="Paste a YouTube URL…"/>
+        </DockPanel>
+
+    </Grid>
+</ui:FluentWindow>

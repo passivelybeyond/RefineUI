@@ -1,0 +1,26 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows10.0.22000.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <Platforms>AnyCPU;x64</Platforms>
+    <ApplicationIcon>RefineIco.ico</ApplicationIcon>
+    <SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <Content Include="RefineIco.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="WPF-UI" Version="4.3.0" />
+    <PackageReference Include="YoutubeExplode" Version="6.6.0" />
+  </ItemGroup>
+  <Target Name="CopyCoreWorker" AfterTargets="Build">
+    <Message Text="SolutionDir = $(SolutionDir)" Importance="high" />
+    <Message Text="OutputPath  = $(OutputPath)" Importance="high" />
+    <Message Text="Source      = $(SolutionDir)RefineCore\x64\Debug\RefineCore.exe" Importance="high" />
+    <Copy SourceFiles="$(SolutionDir)x64\Debug\RefineCore.exe" DestinationFolder="$(OutputPath)" SkipUnchangedFiles="false" ContinueOnError="true" />
+    <Message Text="Copy done" Importance="high" />
+  </Target>
+</Project>

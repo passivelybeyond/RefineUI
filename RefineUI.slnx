@@ -1,0 +1,13 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Project Path="RefineCore/RefineCore.vcxproj" Id="d473552a-7249-4c0c-92ed-31d29822943c" />
+  <Project Path="RefineLauncher/RefineLauncher.csproj" Id="ac56e469-705e-41ab-b1b9-5756ef056d90" />
+  <Project Path="RefineUI/RefineUI.csproj">
+    <BuildDependency Project="RefineCore/RefineCore.vcxproj" />
+    <Platform Solution="*|x64" Project="x64" />
+  </Project>
+</Solution>
